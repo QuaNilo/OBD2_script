@@ -39,6 +39,8 @@ for baud in baud_rates:
     if connection.is_connected():
         print(f"connected using {baud =}")
         break
+    else:
+        print(f"Failed to connect with rate {baud =}")
 
 command_map = {
     "rpm": obd.commands.RPM,
