@@ -9,7 +9,15 @@ parser.add_argument('--port', '-p', type=str, help='The OBD-II connection port (
 parser.add_argument('--listen', '-l', action='store_true', help='If command "GET_DTC" it will listen for dtc errors', required=False)
 args = parser.parse_args()
 
-if args.listen and not args.command.lower().strip() == 'get_dtc':
+command = args.command.lower().strip()
+port = args.port.lower().strip()
+listen = args.listen
+
+print(f"{listen =}")
+print(f"{command =}")
+print(f"{port =}")  
+
+if args.listen and not command == 'get_dtc':
     raise Exception("Listen only works with command 'get_dtc'")
 
 def query(connection, cmd):
@@ -30,7 +38,7 @@ def query(connection, cmd):
     write_to_file(response=response)
     return response
 
-connection = obd.OBD(args.port)
+connection = obd.OBD(port)
 
 command_map = {
     "rpm": obd.commands.RPM,
@@ -45,7 +53,7 @@ command_map = {
 }
 
 try:
-    cmd = args.command.lower() in command_map
+    cmd = command in command_map
 except KeyError as e:
     raise e
     
@@ -54,7 +62,7 @@ try:
 except Exception as e:
     print(f"Error: {str(e)}")
     
-if args.listen:
+if listen:
     while True:
         try:
             response = query(connection=connection, cmd=cmd)
