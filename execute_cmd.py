@@ -13,11 +13,7 @@ command = args.command.lower().strip()
 port = args.port.lower().strip()
 listen = args.listen
 
-print(f"{listen =}")
-print(f"{command =}")
-print(f"{port =}")  
-
-if args.listen and not command == 'get_dtc':
+if listen and not command == 'get_dtc':
     raise Exception("Listen only works with command 'get_dtc'")
 
 def query(connection, cmd):
