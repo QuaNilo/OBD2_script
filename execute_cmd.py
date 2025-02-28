@@ -10,7 +10,7 @@ parser.add_argument('--listen', '-l', action='store_true', help='If command "GET
 args = parser.parse_args()
 
 command = args.command.lower().strip()
-port = args.port.lower().strip()
+port = args.port.strip()
 listen = args.listen
 
 if listen and not command == 'get_dtc':
@@ -33,8 +33,12 @@ def query(connection, cmd):
     response = connection.query(cmd)
     write_to_file(response=response)
     return response
-
-connection = obd.OBD(port)
+baud_rates = [500_000, 38400, 10400, 9600, 115200, 57600, 19200, 14400, 4800]
+for baud in baud_rates:
+    connection = obd.OBD(baudrate=baud)
+    if connection.is_connected():
+        print(f"connected using {baud =}")
+        break
 
 command_map = {
     "rpm": obd.commands.RPM,
