@@ -3,34 +3,32 @@ import argparse
 import time
 import datetime
 
-def query(connection, cmd):
-    def write_to_file(response):
-        if response.value is not None:
-            value_to_log = str(response.value)
-        else:
-            value_to_log = "No value returned"
-        try:
-            with open("dtc_logs", "w") as f:
-                f.write(f"\n Log created on {datetime.now()}")
-                f.write(response.value + "\n")
-        except Exception as e:
-            print(f"Failed to write to log file {str(e)}")
-            
-    response = connection.query(cmd)
-    write_to_file(response=response)
-    print(f"{response =}")
-    print(f"\n{response.value =}")
-    
-    return response
-
 parser = argparse.ArgumentParser()
 parser.add_argument('--command', '-c', type=str, help='the command to execute', required=True)
 parser.add_argument('--port', '-p', type=str, help='The OBD-II connection port (e.g., /dev/ttyUSB0 or COM3)', required=True)
 parser.add_argument('--listen', '-l', action='store_true', help='If command "GET_DTC" it will listen for dtc errors', required=False)
 args = parser.parse_args()
 
-if args.listen and not args.command.lower().trim() == 'get_dtc':
+if args.listen and not args.command.lower().strip() == 'get_dtc':
     raise Exception("Listen only works with command 'get_dtc'")
+
+def query(connection, cmd):
+    def write_to_file(response):
+        if response.value is not None:
+            value_to_log = str(response.value)
+        else:
+            value_to_log = "No value returned"
+        print(value_to_log)
+        try:
+            with open("dtc_logs", "a") as f:
+                f.write(f"\nLog created on {datetime.datetime.now()}\n")
+                f.write(f"{response.value} \n")
+        except Exception as e:
+            print(f"Failed to write to log file {str(e)}")
+            
+    response = connection.query(cmd)
+    write_to_file(response=response)
+    return response
 
 connection = obd.OBD(args.port)
 
