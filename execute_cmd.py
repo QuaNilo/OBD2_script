@@ -3,9 +3,23 @@ import argparse
 import time
 import datetime
 
+command_map = {
+    "rpm": obd.commands.RPM,
+    "speed": obd.commands.SPEED,
+    "throttle": obd.commands.THROTTLE_POS,
+    "coolant_temp": obd.commands.COOLANT_TEMP,
+    "get_dtc": obd.commands.GET_DTC,
+    "clear_dtc": obd.commands.CLEAR_DTC,
+    "fuel_level": obd.commands.FUEL_LEVEL,
+    "fuel_type": obd.commands.FUEL_TYPE,
+    "vin": obd.commands.VIN
+}
+baud_rates = [500_000, 38400, 10400, 9600, 115200, 57600, 19200, 14400, 4800]
+ports = obd.scan_serial()
 parser = argparse.ArgumentParser()
+
 parser.add_argument('--command', '-c', type=str, help='the command to execute', required=True)
-parser.add_argument('--port', '-p', type=str, help='The OBD-II connection port (e.g., /dev/ttyUSB0 or COM3)', required=True)
+parser.add_argument('--port', '-p', type=str, help='The OBD-II connection port (e.g., /dev/ttyUSB0 or COM3)', required=False)
 parser.add_argument('--listen', '-l', action='store_true', help='If command "GET_DTC" it will listen for dtc errors', required=False)
 args = parser.parse_args()
 
@@ -33,29 +47,22 @@ def query(connection, cmd):
     response = connection.query(cmd)
     write_to_file(response=response)
     return response
-baud_rates = [500_000, 38400, 10400, 9600, 115200, 57600, 19200, 14400, 4800]
-for baud in baud_rates:
-    connection = obd.OBD(baudrate=baud)
-    if connection.is_connected():
-        print(f"connected using {baud =}")
-        break
-    else:
-        print(f"Failed to connect with rate {baud =}")
 
-command_map = {
-    "rpm": obd.commands.RPM,
-    "speed": obd.commands.SPEED,
-    "throttle": obd.commands.THROTTLE_POS,
-    "coolant_temp": obd.commands.COOLANT_TEMP,
-    "get_dtc": obd.commands.GET_DTC,
-    "clear_dtc": obd.commands.CLEAR_DTC,
-    "fuel_level": obd.commands.FUEL_LEVEL,
-    "fuel_type": obd.commands.FUEL_TYPE,
-    "vin": obd.commands.VIN
-}
+for baud in baud_rates:
+    try:
+        ##USE 'baudrate' parameter IF NOT WORKING 
+        connection = obd.OBD(ports[0] if not port else port, baudrate=None, fast=False, start_low_power=True)
+        if connection.is_connected():
+            print(f"Successfully connected using {baud} baud")
+            break
+        else:
+            print(f"Failed to connect using {baud} baud")
+    except Exception as e:
+        print(f"Error trying {baud} baud: {e}")
+
 
 try:
-    cmd = command in command_map
+    cmd = command_map[command]
 except KeyError as e:
     raise e
     
